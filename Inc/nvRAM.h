@@ -8,7 +8,7 @@
 #define FLASH_CONFIG_START_ADDR ((uint32_t) 0x0800FC00) // (63) Будем писать в 127 страницу по адресу 0x0801FC00
 // 0x0800C800(50); 0x0800F800(62); 0x0800FC00(63); неработает[0x08010000](64); [0x08011800](70)
 #define UNUSED_FIELDS 10
-#define INDEX 12
+
 struct Config {
     uint32_t notUsed[UNUSED_FIELDS];// эти UNUSED_FIELDS полей портятся процессором по неизвестной причине!!
     uint32_t magicNum;

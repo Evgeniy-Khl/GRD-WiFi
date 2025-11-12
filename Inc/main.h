@@ -128,8 +128,31 @@ void Error_Handler(void);
 #else
   #define CHKSMOKE  1500 // (25 min.) waiting for smoke temperature check in sec.
 #endif
-#define BEGINCOOL 400 // температура 40 грд. выше которой ЗАПРЕЩЕНО включение охлаждения
-#define BEGINHUM  400 // запрет увлажнения при температуре ниже 40 грд.
+#define BEGINCOOL   400 // температура 40 грд. выше которой ЗАПРЕЩЕНО включение охлаждения
+#define BEGINHUM    400 // запрет увлажнения при температуре ниже 40 грд.
+#define INDEX 12
+#define RAMPV_SIZE  4+8+INDEX*2+8
+
+struct Rampv {
+    uint8_t model;       // 1 байт ind=0  модель прибора
+    uint8_t node;        // 1 байт ind=1  сетевой номер прибора
+    uint8_t modeCell;    // 1 байт ind=2  номер режима
+    uint8_t portFlag;    // 1 байт ind=3  Flags CHECK; SPEED; WORK; NEWBUTT; VENTIL; PERFECT; RESERVE; PURGING
+    int16_t t[4];        // 8 байт ind=4-ind=11  значения датчиков температуры
+    uint16_t set[INDEX]; // 24байт ind=12-ind=35 Установки
+    uint8_t fanSpeed;    // 1 байт ind=36 скорость вращения вентилятора
+    uint8_t pvOut;       // 1 байт ind=37 активные выходы реле
+    uint8_t dsplPW;      // 1 байт ind=38 мощность подаваемая на тены
+    uint16_t errors;      // 1 байт ind=39 ошибки
+    uint8_t currHour;    // 1 байт ind=40 часы
+    uint8_t currMin;     // 1 байт ind=41 минуты
+    uint8_t currSec;     // 1 байт ind=42 секунды
+};
+
+union Upv{
+  struct Rampv pv;
+  uint8_t receivedData[RAMPV_SIZE]; // Массив для приема
+};
 
 /* ---структура с битовыми полями -----*/
 struct byte {
@@ -146,6 +169,13 @@ struct byte {
 union Byte {
     unsigned char value;
     struct byte bitfield;
+};
+
+extern union Upv upv;
+
+union d4v{
+  uint8_t data[4];  
+  uint16_t val[2]; 
 };
 
 struct Ds{

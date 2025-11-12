@@ -2,9 +2,8 @@
 #include "nvRam.h"
 #include "tftArcFill.h"
 
-extern uint8_t familycode[MAX_SENSOR][8], modeCell;
+extern uint8_t familycode[MAX_SENSOR][8];
 extern uint16_t speedData[MAX_SPEED][2];
-extern uint16_t set[INDEX];
 extern CRC_HandleTypeDef hcrc;
 
 union DataRam dataRAM;
@@ -32,11 +31,11 @@ uint32_t calcChecksum(void){
 void setData(uint8_t m){
   uint8_t i, x;
   switch (m){
-  	case 0: for(i=0;i<INDEX;i++){set[i] = dataRAM.config.modeSet0[i];} break;
-  	case 1: for(i=0;i<INDEX;i++){set[i] = dataRAM.config.modeSet1[i];} break;
-    case 2: for(i=0;i<INDEX;i++){set[i] = dataRAM.config.modeSet2[i];} break;
-  	case 3: for(i=0;i<INDEX;i++){set[i] = dataRAM.config.modeSet3[i];} break;
-  	default: modeCell = dataRAM.config.mode = 0; for(i=0;i<INDEX;i++){set[i] = dataRAM.config.modeSet0[i];}	break;
+  	case 0: for(i=0;i<INDEX;i++){upv.pv.set[i] = dataRAM.config.modeSet0[i];} break;
+  	case 1: for(i=0;i<INDEX;i++){upv.pv.set[i] = dataRAM.config.modeSet1[i];} break;
+    case 2: for(i=0;i<INDEX;i++){upv.pv.set[i] = dataRAM.config.modeSet2[i];} break;
+  	case 3: for(i=0;i<INDEX;i++){upv.pv.set[i] = dataRAM.config.modeSet3[i];} break;
+  	default: upv.pv.modeCell = dataRAM.config.mode = 0; for(i=0;i<INDEX;i++){upv.pv.set[i] = dataRAM.config.modeSet0[i];}	break;
   }
 //  if(set[VENT]>7) set[VENT]=0;
   for(i=0;i<MAX_SENSOR;i++){
@@ -50,8 +49,8 @@ void setData(uint8_t m){
     }
   }
   PID_Init(&pid, dataRAM.config.koff[m][0], dataRAM.config.koff[m][1], dataRAM.config.koff[m][2]);
-  grafDispl[0].sp = set[T0];
-  grafDispl[1].sp = set[T1];
+  grafDispl[0].sp = upv.pv.set[T0];
+  grafDispl[1].sp = upv.pv.set[T1];
 }
 
 uint8_t initData(void){
@@ -189,8 +188,8 @@ uint8_t initData(void){
     dataRAM.config.checkSum = calcChecksum();
     dataRAM.config.countSave = 0;
   }
-  modeCell = dataRAM.config.mode;
-  setData(modeCell);
+  upv.pv.modeCell = dataRAM.config.mode;
+  setData(upv.pv.modeCell);
   return err;
 }
 
@@ -206,13 +205,13 @@ uint32_t writeData(void){
   uint32_t l_Error = 0x00;
   uint32_t l_Index = 0x00;
   // Заполняем масив
-  dataRAM.config.mode = modeCell;
-  switch (modeCell){
-  	case 0: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet0[i] = set[i];} break;
-  	case 1: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet1[i] = set[i];} break;
-    case 2: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet2[i] = set[i];} break;
-  	case 3: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet3[i] = set[i];} break;
-  	default: dataRAM.config.mode=modeCell=0;  for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet0[i] = set[i];}	break;
+  dataRAM.config.mode = upv.pv.modeCell;
+  switch (upv.pv.modeCell){
+  	case 0: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet0[i] = upv.pv.set[i];} break;
+  	case 1: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet1[i] = upv.pv.set[i];} break;
+    case 2: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet2[i] = upv.pv.set[i];} break;
+  	case 3: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet3[i] = upv.pv.set[i];} break;
+  	default: dataRAM.config.mode=upv.pv.modeCell=0;  for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet0[i] = upv.pv.set[i];}	break;
   }
   dataRAM.config.checkSum = calcChecksum();
   dataRAM.config.countSave = dataRAM.config.countSave + 1;
@@ -241,7 +240,7 @@ uint32_t writeData(void){
     l_Index = l_Index + 1;
     l_Address = l_Address + 4;
   }
-  setData(modeCell);
+  setData(upv.pv.modeCell);
   return l_Error;
 }
 /*

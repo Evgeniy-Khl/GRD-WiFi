@@ -75,18 +75,21 @@ const char* relayName[7]={"ПЫД","НАГРЫВ","ТАЙМЕР","ВОЛОГА","ЕЛЕКТРО","Кл.ДИМА","
 //={{1000,0x2F4},{1200,0x4A6},{1400,0x658},{1600,0x80A},{1800,0x9BC},{2000,0xB6E},{2200,0xD20},{2400,0xFFF}};//d=434->1.15V
 //={{1000,0x2F4},{1200,0x4A6},{1400,0x655},{1600,0x804},{1800,0x9B6},{2000,0xB65},{2200,0xD14},{2400,0xFFF}};//d=434+коррекция
 struct Ds ds;
-uint16_t set[INDEX], speedData[MAX_SPEED][2], errors, arhErrors[15];
+uint16_t speedData[MAX_SPEED][2], arhErrors[15];
 int16_t pvTH, pvRH, tmrCounter, resetDispl=0, displOff=DISPLAYOFF;
 uint16_t touch_x, touch_y, Y_str, X_left, Y_top, Y_bottom, fillScreen, color0, color1, checkSmoke, checkTime;
-uint8_t displ_num=0, modeCell, oldNumSet, buttonAmount, lost;
-uint8_t timer10ms, tmrVent, ticBeep, pwTriac, invers, dsplPW;
+uint8_t displ_num=0, oldNumSet, buttonAmount, lost;
+uint8_t timer10ms, tmrVent, ticBeep, pwTriac, invers;
 uint8_t familycode[MAX_SENSOR][8];
 int8_t ds18b20_amount, numSet=0, tmrWater;
 int8_t relaySet[8]={-1,-1,-1,-1,-1,-1,-1,-1};
 int8_t analogSet[2]={-1,-1};
 uint8_t analogOut[2]={0};
+
+union Upv upv;
 union Byte portFlag;
 union Byte relayOut;
+union d4v crc;
 PIDController pid;
 #ifdef MANUAL_CHECK
   float flT0=320, dpv0;
@@ -292,14 +295,14 @@ int main(void)
       }
       checkButtons(butt_num);                           // проверка нажатой кнопки
       if(displ_num==0 && !(WORK|VENTIL|PURGING)){
-        if(topDispl(touch_x, touch_y)) {newval[0] = modeCell; newval[1]=-1; newval[2]=-1; displ_num = 4; butt_num = 10; resetDispl = 180; NEWBUTT = 1;} // ЗМІНА РЕЖИМУ
+        if(topDispl(touch_x, touch_y)) {newval[0] = upv.pv.modeCell; newval[1]=-1; newval[2]=-1; displ_num = 4; butt_num = 10; resetDispl = 180; NEWBUTT = 1;} // ЗМІНА РЕЖИМУ
       }
       checkTime = 0; CHECK = ON;
     }
     
     // ----------- УВЛАЖНИТЕЛЬ только в режиме варка modeCell==2 и TMON && TMOFF !=0 --------------------
-    if(WORK && modeCell==2){
-      if(set[TMON]!=0 && set[TMOFF]!=0){
+    if(WORK && upv.pv.modeCell==2){
+      if(upv.pv.set[TMON]!=0 && upv.pv.set[TMOFF]!=0){
         if(timer10ms){                  // шаг отсчета интервала таймера 10 милисек.
           timer10ms=0; 
           HUMIDI=humidifier(HUMIDI);    // проверим выход на увлажнитель
@@ -310,8 +313,8 @@ int main(void)
     }
     
     //-------------- Начало проверки каждую 1 сек. -----------------------
-    if(CHECK){ CHECK = OFF; errors=0;  //if(++temp>10) {temp=0; ++pvspeed; pvspeed&=7; ds.pvT[1] = speedData[pvspeed][0]; sendToI2c(speedData[pvspeed][1]);}
-    dsplPW = 0;  
+    if(CHECK){ CHECK = OFF; upv.pv.errors=0;  //if(++temp>10) {temp=0; ++pvspeed; pvspeed&=7; ds.pvT[1] = speedData[pvspeed][0]; sendToI2c(speedData[pvspeed][1]);}
+    upv.pv.dsplPW = 0;  
     if(resetDispl) --resetDispl; 
     else if(displ_num){displ_num = 0; NEWBUTT = 1; displOff=DISPLAYOFF;}  // возврат к главному дисплею
     else if(displOff) --displOff;
@@ -329,12 +332,12 @@ int main(void)
     #endif
         if(tmrVent) --tmrVent;    // ожидаем замыкания контакта частотного преобразователя
         else if(SPEED) WORK=ON;
-        else {errors |= ERR8; WORK=OFF; relayOut.value=OFF;}  // НЕ ПРАЦЮЭ ВЕНТИЛЯТОР
+        else {upv.pv.errors |= ERR8; WORK=OFF; relayOut.value=OFF;}  // НЕ ПРАЦЮЭ ВЕНТИЛЯТОР
       }
       //------------------------------------------- В РАБОТЕ -----------------------------------------------
       if(WORK){
         TIMER=ON;         // всегда включен в работу
-        if(modeCell==2){  // только в режиме варка modeCell==2
+        if(upv.pv.modeCell==2){  // только в режиме варка modeCell==2
           if(HAL_GPIO_ReadPin(Input1_GPIO_Port, Input1_Pin) == GPIO_PIN_RESET){
             if(++tmrWater>5) {tmrWater=5; WATER=ON;}
           }
@@ -344,32 +347,32 @@ int main(void)
         }
         else WATER=OFF;
         //------------ устанавливаем color0 в соответсвии с отклонением ------------------------
-        i16 = set[T0]*10 - ds.pvT[0];           // величина ошибки регулирования датчика 0
+        i16 = upv.pv.set[T0]*10 - ds.pvT[0];           // величина ошибки регулирования датчика 0
         uint16_t abs16 = abs(i16);
-        if(abs16<set[HIST]) PERFECT=ON;         // Вышли на заданную температуру
-        u16 = set[ALRM]*10;                     // привяжем к аварии
+        if(abs16 < upv.pv.set[HIST]) PERFECT=ON;         // Вышли на заданную температуру
+        u16 = upv.pv.set[ALRM]*10;                     // привяжем к аварии
         
         if(i16<=0){
           if(abs16<u16) color0 = GREEN;         // норма
-          else if(abs16>=u16 && abs16<u16*2){errors|=ERR5; color0 = ORANGE;} // ВІДХІЛЕННЯ ТЕМПЕРАТУРИ
-          else {errors|=ERR3; color0 = RED;}    // ПЕРЕГРЕВ В КАМЕРЕ
+          else if(abs16>=u16 && abs16<u16*2){upv.pv.errors|=ERR5; color0 = ORANGE;} // ВІДХІЛЕННЯ ТЕМПЕРАТУРИ
+          else {upv.pv.errors|=ERR3; color0 = RED;}    // ПЕРЕГРЕВ В КАМЕРЕ
         }
         else {
           if(abs16<u16) color0 = GREEN;         // норма
           else if(abs16>=u16*2){
             color0 = CYAN;                      // НИЖЕ нормы
-            if(PERFECT) errors|=ERR5;           // ВІДХІЛЕННЯ ТЕМПЕРАТУРИ
+            if(PERFECT) upv.pv.errors|=ERR5;           // ВІДХІЛЕННЯ ТЕМПЕРАТУРИ
           }
         }
         
         //------------ устанавливаем color1 в соответсвии с отклонением -------------------------
-        i16 = set[T1]*10 - ds.pvT[1];           // величина ошибки регулирования датчика 1
+        i16 = upv.pv.set[T1]*10 - ds.pvT[1];           // величина ошибки регулирования датчика 1
         abs16 = abs(i16);
         
         if(i16<=0){
           if(abs16<u16/2)color1 = GREEN;        // норма
           else if(abs16>=u16/2 && abs16<u16) color1 = ORANGE;  // ВІДХІЛЕННЯ ТЕМПЕРАТУРИ
-          else {errors|=ERR4; color1 = RED;}    // ПЕРЕГРЕВ В ПРОДУКТЕ
+          else {upv.pv.errors|=ERR4; color1 = RED;}    // ПЕРЕГРЕВ В ПРОДУКТЕ
         }
         else {
           if(abs16<u16/2)color1 = GREEN;        // норма
@@ -379,19 +382,19 @@ int main(void)
         // ---------------------------------------- НАГРЕВАТЕЛЬ / ОХЛАДИТЕЛЬ -------------------------------------
         //------ работает как нагреватель
         if(ds.pvT[0]<1999 && ds.pvT[0]>1){
-          i16 = Relay(set[T0]*10 - ds.pvT[0], set[HIST]);   // величина ошибки температуры воздуха
+          i16 = Relay(upv.pv.set[T0]*10 - ds.pvT[0], upv.pv.set[HIST]);   // величина ошибки температуры воздуха
         }
         if(ds18b20_amount>1 && ds.pvT[1]<1999){             // величина ошибки температурs среды
-          u16 = Relay(set[T1]*10 - ds.pvT[1], 0);
+          u16 = Relay(upv.pv.set[T1]*10 - ds.pvT[1], 0);
         }
         if(u16==ON) pwTriac = UpdatePID(&pid,0);            // ПИД нагреватель
-        else {i16 = OFF; errors &= ~ERR5;}
+        else {i16 = OFF; upv.pv.errors &= ~ERR5;}
         if(pwTriac) TRIAC = ON;                             // включить (SSR-25DA)
-        dsplPW = pwTriac;
-        if(dsplPW>100) dsplPW = 100;
+        upv.pv.dsplPW = pwTriac;
+        if(upv.pv.dsplPW>100) upv.pv.dsplPW = 100;
         //------ работает как охладитель
-        if(set[CHILL]&1){  
-          i16 = Relay(ds.pvT[0] - set[T0]*10, set[HIST]);
+        if(upv.pv.set[CHILL]&1){  
+          i16 = Relay(ds.pvT[0] - upv.pv.set[T0]*10, upv.pv.set[HIST]);
           if(ds.pvT[0] > BEGINCOOL) i16 = OFF;              // температура выше которой ЗАПРЕЩЕНО включение охлаждения
         }
         switch (i16){
@@ -400,14 +403,14 @@ int main(void)
         }
         
         //-------------------------- Только для режима КОПЧЕНИЯ ---------------------------------
-        if(modeCell==3){
+        if(upv.pv.modeCell==3){
           ELECTRO = ignition(ELECTRO);
-          i16 = set[T2]*10 - ds.pvT[2];   // величина ошибки регулирования датчика 2 (Дым)
+          i16 = upv.pv.set[T2]*10 - ds.pvT[2];   // величина ошибки регулирования датчика 2 (Дым)
           if(++checkSmoke>CHKSMOKE){      // (відхилення 2 грд.Ц) ТЕМПЕРАТУРЫ ДЫМА
             checkSmoke=CHKSMOKE;
-            if(abs(i16)>set[ALRM]*10*2) errors|=ERR6;
+            if(abs(i16) > upv.pv.set[ALRM]*10*2) upv.pv.errors|=ERR6;
           }
-          u16 = Relay(i16, set[HIST]);  // величина ошибки температуры дыма
+          u16 = Relay(i16, upv.pv.set[HIST]);  // величина ошибки температуры дыма
           switch (u16){
             case ON:  SMOKE = ON;  break;
             case OFF: SMOKE = OFF; break;
@@ -415,10 +418,10 @@ int main(void)
         }
         
         //-------------------------- Только для режима ВАРЕНИЯ ---------------------------------
-        if(modeCell==2){
-          if(set[TMON]==0 || set[TMOFF]==0){
-            i16 = set[T3]*10 - ds.pvT[3];     // величина ошибки регулирования датчика 3 (Влажность)
-            u16 = Relay(i16, set[HIST]);      // ЧЕТВЕРТЫЙ датчик - датчик влажности
+        if(upv.pv.modeCell==2){
+          if(upv.pv.set[TMON]==0 || upv.pv.set[TMOFF]==0){
+            i16 = upv.pv.set[T3]*10 - ds.pvT[3];     // величина ошибки регулирования датчика 3 (Влажность)
+            u16 = Relay(i16, upv.pv.set[HIST]);      // ЧЕТВЕРТЫЙ датчик - датчик влажности
             if(ds.pvT[0] < BEGINHUM) u16=OFF; // запрет увлажнения при температуре ниже 40 грд.
             switch (u16){
               case ON:  HUMIDI = ON;  break;
@@ -463,9 +466,9 @@ int main(void)
 #endif
         
         //------------------------- ЗВЕРШЕНИЕ текущего режима ----------------------------------
-        if(set[TMR0]>0){                                // если TMR0>0 то завершение режима по таймеру
+        if(upv.pv.set[TMR0]>0){                                // если TMR0>0 то завершение режима по таймеру
           u16 = sTime.Hours*60 + sTime.Minutes;         // всего в минутах
-          i16 = (set[TMR0] - u16)*60 - sTime.Seconds;   // осталось до выключения в секундах
+          i16 = (upv.pv.set[TMR0] - u16)*60 - sTime.Seconds;   // осталось до выключения в секундах
           if(i16<30) ticBeep = 5;                       // включить сигнал
           if(i16<=0){                                   // завершение режима
             portFlag.value = OFF; PURGING=ON; relayOut.value=OFF; ticBeep=200;
@@ -475,7 +478,7 @@ int main(void)
           }
         }
         else if(ds18b20_amount==1){      // если только 1 датчик и продолжительность 0 то завершение по температуре камеры.          
-          i16 = Relay(set[T0]*10 - ds.pvT[0], 0);   // температура камеры
+          i16 = Relay(upv.pv.set[T0]*10 - ds.pvT[0], 0);   // температура камеры
           if(i16==OFF){
             portFlag.value = OFF; PURGING=ON; relayOut.value=OFF; ticBeep=200;
             //------- далее продувка ---------
@@ -484,7 +487,7 @@ int main(void)
           }
         }
         else if(ds18b20_amount>1){      // если датчиков много и продолжительность 0 то завершение по температуре среды.          
-          i16 = Relay(set[T1]*10 - ds.pvT[1], 0);   // температура камеры
+          i16 = Relay(upv.pv.set[T1]*10 - ds.pvT[1], 0);   // температура камеры
           if(i16==OFF){
             portFlag.value = OFF; PURGING=ON; relayOut.value=OFF; ticBeep=200;
             //------- далее продувка ---------
@@ -496,7 +499,7 @@ int main(void)
       } //--------------------------- КОНЕЦ в работе -----------------------------------------------
       else if(PURGING){
         u16 = sTime.Minutes*60+sTime.Seconds;           // всего в секундах
-        if(u16>=set[TMR1]) {PURGING=OFF; sendToI2c(0); NEWBUTT=ON; ticBeep=200;}
+        if(u16>=upv.pv.set[TMR1]) {PURGING=OFF; sendToI2c(0); NEWBUTT=ON; ticBeep=200;}
       }
       //------ Проверка на ручное управление ---------------------------------------
       for (i16=0;i16<7;i16++){
@@ -508,8 +511,8 @@ int main(void)
 //      for (i16=0;i16<2;i16++){  // ручное управление аналоговыми выводами
 //        if(analogSet[i16]>-1) analogOut[i16]=analogSet[i16];
 //      }
-      if(errors && (set[CHILL]&2)==0){    // 2-отключены аварийные звуковые сигналы
-        switch (errors){
+      if(upv.pv.errors && (upv.pv.set[CHILL]&2)==0){    // 2-отключены аварийные звуковые сигналы
+        switch (upv.pv.errors){
           case 0x01: ticBeep = 80; break; // ПОМИЛКА ДАТЧИКА N1
           case 0x02: ticBeep = 80; break; // ПОМИЛКА ДАТЧИКА N2
           case 0x04: ticBeep = 80; break; // ПОМИЛКА ДАТЧИКА N3
@@ -521,16 +524,29 @@ int main(void)
           case ERR7: ticBeep = 60; break; //
           case ERR8: ticBeep = 60; break; // НЕ ПРАЦЮЭ ВЕНТИЛЯТОР
           default: 
-            if(errors==0x0C) ticBeep = 80;
+            if(upv.pv.errors==0x0C) ticBeep = 80;
             else ticBeep =200;
           break;
         }
       }
-      if(errors) ALARM = ON; else ALARM = OFF;  // световой сигнал ошибки
-
+      if(upv.pv.errors) ALARM = ON; else ALARM = OFF;  // световой сигнал ошибки
       display();
+      // -------------------- UART ----------------------------------
+      upv.pv.portFlag = portFlag.value;
+      upv.pv.pvOut = relayOut.value;
+      upv.pv.fanSpeed = speedData[upv.pv.set[VENT]][0];
+      upv.pv.currHour = sTime.Hours;
+      upv.pv.currMin = sTime.Minutes;
+      upv.pv.currSec = sTime.Seconds;
+      //-------------------------------------------------------------
+      crc.val[0] = 0;
+      for(uint8_t i=0;i<RAMPV_SIZE;i++){
+        crc.val[0] += upv.receivedData[i];
+        crc.val[0] ^= (crc.val[0]>>2);
+      }
+      HAL_UART_Transmit(&huart1,(uint8_t*)upv.receivedData,RAMPV_SIZE,0x1000);// отправка upv
+      HAL_UART_Transmit(&huart1,(uint8_t*)crc.data,4,0x1000);   // отправка crc, "\r=<CR>, \n=<LF>"
     }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

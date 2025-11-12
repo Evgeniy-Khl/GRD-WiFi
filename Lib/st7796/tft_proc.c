@@ -11,9 +11,9 @@ uint16_t maxVal, minVal;
 extern int8_t relaySet[8];
 extern int8_t analogSet[2];
 extern int16_t pvT[];
-extern uint16_t set[MAX_SET], fillScreen;
+extern uint16_t fillScreen;
 extern uint16_t speedData[MAX_SPEED][2];
-extern uint8_t displ_num, modeCell, ticBeep, show, Y_str, X_left, Y_top, Y_bottom, buttonAmount, resetDispl;
+extern uint8_t displ_num, ticBeep, show, Y_str, X_left, Y_top, Y_bottom, buttonAmount, resetDispl;
 extern int8_t ds18b20_amount, numSet, tiimeDispl, oldNumSet;
 
 extern union Byte portFlag;
@@ -171,17 +171,17 @@ void checkButtons(uint8_t item){
           case 1: if (++numSet>MAX_SET-1) numSet = -1;	break;
           case 2: if (--numSet<-1) numSet = MAX_SET-1;	break;
           case 3: oldNumSet = numSet; displ_num=3;
-                  if(numSet==0 || numSet==1) newval[numSet]=set[numSet];    // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐ
+                  if(numSet==0 || numSet==1) newval[numSet]=upv.pv.set[numSet];    // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐ
                   else if(numSet==2){
-                    if(modeCell==3) newval[numSet]=set[T2];                 // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐÈ Äèìà
-                    else if(modeCell==2) newval[numSet]=set[T3];            // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐÈ Âîëîãîãî
+                    if(upv.pv.modeCell==3) newval[numSet]=upv.pv.set[T2];                 // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐÈ Äèìà
+                    else if(upv.pv.modeCell==2) newval[numSet]=upv.pv.set[T3];            // ÇÌ²ÍÀ ÒÅÌÏÅÐÀÒÓÐÈ Âîëîãîãî
                   }
-                  else if(numSet==3) newval[numSet]=set[TMR0];              // "ÒÐÈÂÀËÛÑÒÜ"
-                  else if(numSet==4){numSet=set[VENT]; displ_num=7;}        // âèá³ð ØÂÈÄÊ²ÑÒ² îáåðòàííÿ
-                  else if(numSet==5) newval[numSet]=set[TMON];              // "ÒÀÉÌ.ON"
-                  else if(numSet==6) newval[numSet]=set[TMOFF];             // "ÒÀÉÌ.OFF"
+                  else if(numSet==3) newval[numSet]=upv.pv.set[TMR0];              // "ÒÐÈÂÀËÛÑÒÜ"
+                  else if(numSet==4){numSet=upv.pv.set[VENT]; displ_num=7;}        // âèá³ð ØÂÈÄÊ²ÑÒ² îáåðòàííÿ
+                  else if(numSet==5) newval[numSet]=upv.pv.set[TMON];              // "ÒÀÉÌ.ON"
+                  else if(numSet==6) newval[numSet]=upv.pv.set[TMOFF];             // "ÒÀÉÌ.OFF"
                   else if(numSet==7){numSet=0; newval[0]=0; displ_num=5;}   // IÍØÅ
-                  else {newval[0] = modeCell; newval[1]=10; displ_num = 4;} // ÇÌ²ÍÀ ÐÅÆÈÌÓ
+                  else {newval[0] = upv.pv.modeCell; newval[1]=10; displ_num = 4;} // ÇÌ²ÍÀ ÐÅÆÈÌÓ
                   NEWBUTT = 1; break;
         }
         item = 10;
@@ -191,7 +191,7 @@ void checkButtons(uint8_t item){
         else if(numSet==3){maxVal=1440, minVal=0;}// Äëèòåëüíîñòü ðåæèìà ìèí.
         else if(numSet==5 || numSet==6){
           // åñëè ÂÀÐÊÀ (modeCell=2) çàäàåòñÿ â mñåê.[îò 0.1ñåê. äî 10 ñåê.] (ïåðèîä 10 mñåê.)
-          if(modeCell==2){maxVal=100, minVal=0;} else {maxVal=500, minVal=0;}// Òàéìåð ON/OFF
+          if(upv.pv.modeCell==2){maxVal=100, minVal=0;} else {maxVal=500, minVal=0;}// Òàéìåð ON/OFF
         }
         switch (item){
           case 0: displ_num = 2; NEWBUTT = 1; break;
@@ -217,13 +217,13 @@ void checkButtons(uint8_t item){
             GUI_FillRectangle(0, Y_top, lcddev.width, lcddev.height, fillScreen);
             GUI_WriteString(lcddev.width/2-90,lcddev.height/2-60, "ÂÈÊÎÍÀÞ ÇÀÏÈÑ!", Font_11x18, GREEN, BLACK);
             if(numSet==2){
-              if(modeCell==3) set[T2] = newval[numSet];     // òåìïåðàòóðà (Äûì)
-              if(modeCell==2) set[T3] = newval[numSet];     // òåìïåðàòóðà (Âëàæíûé)
+              if(upv.pv.modeCell==3) upv.pv.set[T2] = newval[numSet];     // òåìïåðàòóðà (Äûì)
+              if(upv.pv.modeCell==2) upv.pv.set[T3] = newval[numSet];     // òåìïåðàòóðà (Âëàæíûé)
             }
-            else if(numSet==3) set[TMR0] = newval[numSet];  // Äëèòåëüíîñòü ðåæèìà
-            else if(numSet==5) set[TMON] = newval[numSet];  // Òàéìåð ON
-            else if(numSet==6) set[TMOFF] = newval[numSet]; // Òàéìåð OFF
-            else set[numSet] = newval[numSet];     // òåìïåðàòóðà T0, T1
+            else if(numSet==3) upv.pv.set[TMR0] = newval[numSet];  // Äëèòåëüíîñòü ðåæèìà
+            else if(numSet==5) upv.pv.set[TMON] = newval[numSet];  // Òàéìåð ON
+            else if(numSet==6) upv.pv.set[TMOFF] = newval[numSet]; // Òàéìåð OFF
+            else upv.pv.set[numSet] = newval[numSet];     // òåìïåðàòóðà T0, T1
             uint32_t er = writeData();        // çàïèøåì çíà÷åíèÿ âî FLASH
             if(er) GUI_WriteString(lcddev.width/2-40,lcddev.height/2-20, "ÏÎÌÈËÊÀ!", Font_11x18, YELLOW, RED);
             else GUI_WriteString(lcddev.width/2-10,lcddev.height/2+20, "OK", Font_11x18, GREEN, BLACK);
@@ -244,8 +244,8 @@ void checkButtons(uint8_t item){
           case 3: 
             GUI_FillRectangle(0, Y_top, lcddev.width, lcddev.height, fillScreen);
             GUI_WriteString(lcddev.width/2-90,lcddev.height/2-60, "ÂÈÊÎÍÀÞ ÇÀÏÈÑ!", Font_11x18, GREEN, BLACK);
-            modeCell = newval[0];
-            setData(modeCell);                // óñòàíîâèì íîâûå çíà÷åíèÿ
+            upv.pv.modeCell = newval[0];
+            setData(upv.pv.modeCell);                // óñòàíîâèì íîâûå çíà÷åíèÿ
             uint32_t er = writeData();        // çàïèøåì çíà÷åíèÿ âî FLASH
             if(er) GUI_WriteString(lcddev.width/2-40,lcddev.height/2-20, "ÏÎÌÈËÊÀ!", Font_11x18, YELLOW, RED);
             else GUI_WriteString(lcddev.width/2-10,lcddev.height/2+20, "OK", Font_11x18, GREEN, BLACK);
@@ -263,8 +263,8 @@ void checkButtons(uint8_t item){
           case 1: if (++numSet>MAX_OTHER-1) numSet = 0;	break;
           case 2: if (--numSet<0) numSet = MAX_OTHER-1;	break;
           case 3: 
-                  if(numSet<4) newval[numSet] = set[numSet+8];
-                  else newval[numSet] = dataRAM.config.koff[modeCell][numSet-4];
+                  if(numSet<4) newval[numSet] = upv.pv.set[numSet+8];
+                  else newval[numSet] = dataRAM.config.koff[upv.pv.modeCell][numSet-4];
 				  displ_num = 6; NEWBUTT = 1; break;
         }
         item = 10;
@@ -300,8 +300,8 @@ void checkButtons(uint8_t item){
           case 3: 
             GUI_FillRectangle(0, Y_top, lcddev.width, lcddev.height, fillScreen);
             GUI_WriteString(lcddev.width/2-90,lcddev.height/2-60, "ÂÈÊÎÍÀÞ ÇÀÏÈÑ!", Font_11x18, GREEN, BLACK);
-            if(numSet<4) set[numSet+8] = newval[numSet];     // óñòàíîâèì íîâûå çíà÷åíèÿ
-            else dataRAM.config.koff[modeCell][numSet-4] = newval[numSet];
+            if(numSet<4) upv.pv.set[numSet+8] = newval[numSet];     // óñòàíîâèì íîâûå çíà÷åíèÿ
+            else dataRAM.config.koff[upv.pv.modeCell][numSet-4] = newval[numSet];
             uint32_t er = writeData();        // çàïèøåì çíà÷åíèÿ âî FLASH
             if(er) GUI_WriteString(lcddev.width/2-40,lcddev.height/2-20, "ÏÎÌÈËÊÀ!", Font_11x18, YELLOW, RED);
             else GUI_WriteString(lcddev.width/2-10,lcddev.height/2+20, "OK", Font_11x18, GREEN, BLACK);
@@ -323,13 +323,13 @@ void checkButtons(uint8_t item){
           case 3: 
             GUI_FillRectangle(0, Y_top, lcddev.width, lcddev.height, fillScreen);
             GUI_WriteString(lcddev.width/2-90,lcddev.height/2-60, "ÂÈÊÎÍÀÞ ÇÀÏÈÑ!", Font_11x18, GREEN, BLACK);
-            set[VENT] = numSet;     // óñòàíîâèì íîâûå çíà÷åíèÿ
+            upv.pv.set[VENT] = numSet;     // óñòàíîâèì íîâûå çíà÷åíèÿ
             for(uint8_t i=0;i<MAX_SPEED;i++){
               for(uint8_t x=0;x<2;x++){
                 dataRAM.config.speedData[i][x] = speedData[i][x];
               }
             }
-            if(WORK|VENTIL|PURGING) sendToI2c(speedData[set[VENT]][1]);
+            if(WORK|VENTIL|PURGING) sendToI2c(speedData[upv.pv.set[VENT]][1]);
             uint32_t er = writeData();        // çàïèøåì çíà÷åíèÿ âî FLASH
             if(er) GUI_WriteString(lcddev.width/2-40,lcddev.height/2-20, "ÏÎÌÈËÊÀ!", Font_11x18, YELLOW, RED);
             else GUI_WriteString(lcddev.width/2-10, lcddev.height/2+20, "OK", Font_11x18, GREEN, BLACK);

@@ -11,7 +11,7 @@ uint8_t ROM_NO[8];
 extern char buffTFT[];
 extern uint8_t familycode[MAX_SENSOR][8], ds18b20_amount, Y_str, Y_top;
 extern int16_t pvTH, pvRH;
-extern uint16_t fillScreen, errors;
+extern uint16_t fillScreen;
 
 //--------------------------------------------------
 __STATIC_INLINE void DelayMicro(__IO uint32_t micros){
@@ -242,7 +242,7 @@ void temperature_check(){
     }
     else if (++try_cnt > 1){    // (199) если ошибка более X раз то больше не опрашиваем
       try_cnt = 0;
-      if(++ds.err[item]>4) {ds.pvT[item] = 1990; errors |= (1<<item);}
+      if(++ds.err[item]>4) {ds.pvT[item] = 1990; upv.pv.errors |= (1<<item);}
     }; 
     if (try_cnt==0) item++;
    }
