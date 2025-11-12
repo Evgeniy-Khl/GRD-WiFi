@@ -80,7 +80,7 @@ uint8_t humidifier(uint8_t value){
    else {
       if(tmrCounter) tmrCounter--; else {value=ON; tmrCounter=upv.pv.set[TMON]*10;}  // Длительность впрыска 6*10=60*10msek.=0.6sek
    }
-  if(ds.pvT[0] < BEGINHUM) value=OFF;        // запрет увлажнения при температуре ниже 40 грд.
+  if(upv.pv.t[0] < BEGINHUM) value=OFF;        // запрет увлажнения при температуре ниже 40 грд.
   return value;
 }
 
@@ -100,7 +100,7 @@ uint8_t ignition(uint8_t value){
 uint8_t UpdatePID(PIDController *pid, uint8_t cn){
  int16_t error, derivative;
   // Вычисление ошибки
-  error = upv.pv.set[cn]*10 - ds.pvT[cn];
+  error = upv.pv.set[cn]*10 - upv.pv.t[cn];
   // Пропорциональная составляющая
   pid->pPart = (float)error * pid->Kp;
   // Интегральная составляющая

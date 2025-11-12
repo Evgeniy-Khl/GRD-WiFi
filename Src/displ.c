@@ -86,12 +86,12 @@ void displ_0(void){
   else if(upv.pv.errors & ERR4) GUI_WriteString(X_left, Y_str, " оепецпIб ", Font_11x18, YELLOW, RED);
   else GUI_WriteString(X_left, Y_str, "  опндсйр ", Font_11x18, YELLOW, fillScreen);
   //----------------------
-  if(grafDispl[0].value != ds.pvT[0] || NEWBUTT) {
-      grafDispl[0].value = ds.pvT[0];
+  if(grafDispl[0].value != upv.pv.t[0] || NEWBUTT) {
+      grafDispl[0].value = upv.pv.t[0];
       diagram(grafDispl[0], color0);
   }
-  if(grafDispl[1].value != ds.pvT[1] || NEWBUTT) {
-      grafDispl[1].value = ds.pvT[1];
+  if(grafDispl[1].value != upv.pv.t[1] || NEWBUTT) {
+      grafDispl[1].value = upv.pv.t[1];
       diagram(grafDispl[1], color1);
   }
   NEWBUTT = OFF;
@@ -130,15 +130,15 @@ void displ_0(void){
       sensor = T2;
       if(upv.pv.errors & 0x0004) GUI_WriteString(30, Y_str, "    онлхкйю дюрвхйю    ", Font_11x18, YELLOW, RED);
       else if(upv.pv.errors & ERR6){
-        if(upv.pv.set[sensor]*10 > ds.pvT[sensor]) GUI_WriteString(30, Y_str, "дхл мхгэйнз релоепюрспх", Font_11x18, YELLOW, RED);
+        if(upv.pv.set[sensor]*10 > upv.pv.t[sensor]) GUI_WriteString(30, Y_str, "дхл мхгэйнз релоепюрспх", Font_11x18, YELLOW, RED);
         else  GUI_WriteString(30, Y_str, "дхл бхянйнз релоепюрспх", Font_11x18, YELLOW, RED);
       }
       else GUI_WriteString(30, Y_str, "       дюрвхй дхлс     ", Font_11x18, YELLOW, fillScreen);
     }
     Y_str = Y_str+18+15; // 270
     
-    if(ds.pvT[sensor]<1000) sprintf(buffTFT,"%3.1f$ ",(float)ds.pvT[sensor]/10);
-    else if(ds.pvT[sensor]<1270) sprintf(buffTFT,"%5d$ ", ds.pvT[sensor]/10);
+    if(upv.pv.t[sensor]<1000) sprintf(buffTFT,"%3.1f$ ",(float)upv.pv.t[sensor]/10);
+    else if(upv.pv.t[sensor]<1270) sprintf(buffTFT,"%5d$ ", upv.pv.t[sensor]/10);
     else sprintf(buffTFT," ---  ");
     GUI_WriteString(55, Y_str, buffTFT, Font_16x26, WHITE, BLACK);
     sprintf(buffTFT,"%3i.0$ ", upv.pv.set[sensor]);
@@ -205,10 +205,10 @@ void displ_1(void){
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
 
     Y_str = Y_str+18+5;
-    sprintf(buffTFT,"D1%2x; D2%2x; D3%2x; D4%2x;", ds.err[0], ds.err[1], ds.err[2], ds.err[3]);
+    sprintf(buffTFT,"D1%2x; D2%2x; D3%2x; D4%2x;", dsErr[0], dsErr[1], dsErr[2], dsErr[3]);
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
     Y_str = Y_str+18+5;
-    sprintf(buffTFT,"Out=%+5d; T=%3.1f; E=%+3d", pid.output, (float)ds.pvT[0]/10, pid.prev_error);
+    sprintf(buffTFT,"Out=%+5d; T=%3.1f; E=%+3d", pid.output, (float)upv.pv.t[0]/10, pid.prev_error);
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
 #endif
     Y_str = Y_str+18+5;

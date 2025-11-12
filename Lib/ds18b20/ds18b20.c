@@ -9,7 +9,7 @@ uint8_t LastFamilyDiscrepancy;
 uint8_t ROM_NO[8];
 //uint8_t my_dt[8], my_ret;
 extern char buffTFT[];
-extern uint8_t familycode[MAX_SENSOR][8], ds18b20_amount, Y_str, Y_top;
+extern uint8_t familycode[MAX_SENSOR][8], dsErr[MAX_SENSOR], ds18b20_amount, Y_str, Y_top;
 extern int16_t pvTH, pvRH;
 extern uint16_t fillScreen;
 
@@ -230,19 +230,19 @@ void temperature_check(){
     crc = ds18b20_ReadByte(); // Read CRC byte
     byte = dallas_crc8(buffer.data, 8);
     if (byte==crc){
-      try_cnt = 0; ds.err[item]=0;
+      try_cnt = 0; dsErr[item]=0;
       if (buffer.val<0){
         buffer.val = -buffer.val;
-        ds.pvT[item] = buffer.val*10/16;
-        ds.pvT[item] = -ds.pvT[0];
+        upv.pv.t[item] = buffer.val*10/16;
+        upv.pv.t[item] = -upv.pv.t[0];
       }
-      else ds.pvT[item] =  buffer.val*10/16;
+      else upv.pv.t[item] =  buffer.val*10/16;
       crc = buffer.data[2]&TUNING;
-      if (crc==TUNING){int8_t correction=buffer.data[3]; ds.pvT[item] +=correction;}// корекция показаний датчика
+      if (crc==TUNING){int8_t correction=buffer.data[3]; upv.pv.t[item] +=correction;}// корекция показаний датчика
     }
     else if (++try_cnt > 1){    // (199) если ошибка более X раз то больше не опрашиваем
       try_cnt = 0;
-      if(++ds.err[item]>4) {ds.pvT[item] = 1990; upv.pv.errors |= (1<<item);}
+      if(++dsErr[item]>4) {upv.pv.t[item] = 1990; upv.pv.errors |= (1<<item);}
     }; 
     if (try_cnt==0) item++;
    }
