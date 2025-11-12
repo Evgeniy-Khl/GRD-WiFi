@@ -1,0 +1,108 @@
+#include "tftArcFill.h"
+#include <math.h>
+
+extern uint16_t set[];
+
+long map(long value, long fromLow, long fromHigh, long toLow, long toHigh){
+  long result;
+  result = (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
+  return result;
+}
+
+// #########################################################################
+// Draw a circular or elliptical arc with a defined thickness
+// #########################################################################
+
+// x,y == coords of centre of arc
+// start_angle = 0 - 359
+// seg_count = number of 6 degree segments to draw (60 => 360 degree arc)
+// rx = x axis outer radius
+// ry = y axis outer radius
+// w  = width (thickness) of arc in pixels
+// colour = 16-bit colour value
+// Note if rx and ry are the same then an arc of a circle is drawn
+
+void fillArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w, unsigned int colour)
+{
+
+  uint8_t seg = 6; // Segments are 3 degrees wide = ypos segments for 360 degrees
+  uint8_t inc = 6; // Draw segments every 3 degrees, increase to 6 for segmented ring
+
+  // Calculate first pair of coordinates for seg_w start
+  float sx = cos((start_angle - 210) * DEG2RAD);
+  float sy = sin((start_angle - 210) * DEG2RAD);
+  uint16_t x0 = sx * (rx - w) + x;
+  uint16_t y0 = sy * (ry - w) + y;
+  uint16_t x1 = sx * rx + x;
+  uint16_t y1 = sy * ry + y;
+
+  // Draw colour blocks every inc degrees
+  for (int i = start_angle; i < start_angle + seg * seg_count; i += inc) {
+
+    // Calculate pair of coordinates for seg_w end
+    float sx2 = cos((i + seg - 210) * DEG2RAD);
+    float sy2 = sin((i + seg - 210) * DEG2RAD);
+    int x2 = sx2 * (rx - w) + x;
+    int y2 = sy2 * (ry - w) + y;
+    int x3 = sx2 * rx + x;
+    int y3 = sy2 * ry + y;
+
+    Fill_Triangel(x0, y0, x1, y1, x2, y2, colour);
+    Fill_Triangel(x1, y1, x2, y2, x3, y3, colour);
+
+    // Copy seg_w end to seg_w start for next seg_w
+    x0 = x2;
+    y0 = y2;
+    x1 = x3;
+    y1 = y3;
+  }
+}
+
+//#########################################################################
+void diagram(GrafDispl grafDispl, uint16_t color){
+  char tempStr[10]; // Буфер для строки температуры
+  uint8_t seg_w = 20;
+  uint16_t tmpval0,tmpval1, maxtemp, mintemp, lightBlue, greenValue, yellowValue, redValue;
+  if(grafDispl.xpos - grafDispl.radius < 0) grafDispl.xpos = grafDispl.radius;
+  if(grafDispl.xpos + grafDispl.radius > lcddev.width) grafDispl.xpos = lcddev.width - grafDispl.radius;
+  if(grafDispl.ypos - grafDispl.radius < 0) grafDispl.ypos  = grafDispl.radius;
+  if(grafDispl.ypos + grafDispl.radius > lcddev.height) grafDispl.ypos = lcddev.height - grafDispl.radius;
+  if(grafDispl.radius < 60) grafDispl.radius = 60;
+  
+  lightBlue = grafDispl.sp * 10 - 50;     // 650
+  greenValue = grafDispl.sp * 10 - 10;    // 690
+  yellowValue = grafDispl.sp * 10 + 50;   // 750
+  redValue = grafDispl.sp * 10 + 50 + 50; // 800
+  maxtemp = redValue + 160;               // 960
+  mintemp = lightBlue - 200;              // 450
+
+  tmpval1 = map(lightBlue, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, 0, tmpval1/6, grafDispl.radius, grafDispl.radius, seg_w, BLUE);
+  tmpval0 = tmpval1-5;
+  tmpval1 = map(greenValue, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, tmpval0, (tmpval1-tmpval0)/6, grafDispl.radius, grafDispl.radius, seg_w, CYAN);
+  tmpval0 = tmpval1-5;
+  tmpval1 = map(yellowValue, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, tmpval0, (tmpval1-tmpval0)/6, grafDispl.radius, grafDispl.radius, seg_w, GREEN);
+  tmpval0 = tmpval1-5;
+  tmpval1 = map(redValue, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, tmpval0, (tmpval1-tmpval0)/6, grafDispl.radius, grafDispl.radius, seg_w, ORANGE);
+  tmpval0 = tmpval1-5;
+  tmpval1 = map(maxtemp, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, tmpval0, (tmpval1-tmpval0)/6, grafDispl.radius, grafDispl.radius, seg_w, RED);
+
+  fillArc(grafDispl.xpos, grafDispl.ypos, 0, 40, grafDispl.radius-20, grafDispl.radius-20, seg_w, BLACK);
+  tmpval0 = grafDispl.value;
+  if(tmpval0 < mintemp) tmpval0 = mintemp;                // 450
+  else if(tmpval0 > (maxtemp-30)) tmpval0 = (maxtemp-30); // 930
+  tmpval1 = map(tmpval0, mintemp, maxtemp, 0, 240);
+  fillArc(grafDispl.xpos, grafDispl.ypos, tmpval1, 1, grafDispl.radius-10, grafDispl.radius-10, seg_w+8, WHITE);
+  grafDispl.xpos -= 39; grafDispl.ypos -= 13;
+  if(grafDispl.value<1000) sprintf(tempStr,"%2.1f$",(float)grafDispl.value/10);
+  else if(grafDispl.value<1270) sprintf(tempStr,"%5d$", grafDispl.value/10);
+  else sprintf(tempStr," ---  ");
+  GUI_WriteString(grafDispl.xpos, grafDispl.ypos, tempStr, Font_16x26, color, BLACK);
+  grafDispl.xpos -= 16; grafDispl.ypos = grafDispl.ypos+48;
+  sprintf(tempStr,"%3i.0$ ", grafDispl.sp);
+  GUI_WriteString(grafDispl.xpos, grafDispl.ypos, tempStr, Font_16x26, BLACK, WHITE);
+}
