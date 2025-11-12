@@ -178,13 +178,6 @@ union d4v{
   uint16_t val[2]; 
 };
 
-//struct Ds{
-//  int16_t pvT[MAX_SENSOR];
-//  uint8_t err[MAX_SENSOR];
-//};
-
-//extern struct Ds ds;
-
 typedef struct {
     float Ki, iPart, Kp, pPart;  // Коэффициенты PID
     int32_t dPart, prev_error, output;
