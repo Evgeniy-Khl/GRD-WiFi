@@ -264,7 +264,9 @@ void checkButtons(uint8_t item){
           case 2: if (--numSet<0) numSet = MAX_OTHER-1;	break;
           case 3: 
                   if(numSet<4) newval[numSet] = upv.pv.set[numSet+8];
-                  else newval[numSet] = dataRAM.config.koff[upv.pv.modeCell][numSet-4];
+                  else if(numSet<7) newval[numSet] = dataRAM.config.koff[upv.pv.modeCell][numSet-4];
+                  else if(numSet == 7) newval[numSet] = upv.pv.id;
+                  else if(numSet == 8) newval[numSet] = upv.pv.wifi;
 				  displ_num = 6; NEWBUTT = 1; break;
         }
         item = 10;
@@ -277,6 +279,7 @@ void checkButtons(uint8_t item){
         else if(numSet==4){maxVal=1000, minVal=1;}// пропорциональный
         else if(numSet==5){maxVal=10000, minVal=0;}// интегральный
         else if(numSet==6){maxVal=100, minVal=0;}// диференциальный
+        else {maxVal=100, minVal=0;}// "ID","WiFi"
         switch (item){
           case 0: displ_num = 5; NEWBUTT = 1; break;
           case 1: newval[numSet]+=1;	
@@ -301,7 +304,9 @@ void checkButtons(uint8_t item){
             GUI_FillRectangle(0, Y_top, lcddev.width, lcddev.height, fillScreen);
             GUI_WriteString(lcddev.width/2-90,lcddev.height/2-60, "ВИКОНАЮ ЗАПИС!", Font_11x18, GREEN, BLACK);
             if(numSet<4) upv.pv.set[numSet+8] = newval[numSet];     // установим новые значения
-            else dataRAM.config.koff[upv.pv.modeCell][numSet-4] = newval[numSet];
+            else if(numSet<7) dataRAM.config.koff[upv.pv.modeCell][numSet-4] = newval[numSet];
+            else if(numSet == 7) upv.pv.id = newval[numSet];
+            else if(numSet == 8) upv.pv.wifi = newval[numSet];
             uint32_t er = writeData();        // запишем значения во FLASH
             if(er) GUI_WriteString(lcddev.width/2-40,lcddev.height/2-20, "ПОМИЛКА!", Font_11x18, YELLOW, RED);
             else GUI_WriteString(lcddev.width/2-10,lcddev.height/2+20, "OK", Font_11x18, GREEN, BLACK);

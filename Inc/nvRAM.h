@@ -22,6 +22,8 @@ struct Config {
     int8_t analogSet[2];  // analogSet[0;1]- ручное задание выхода;
     uint8_t familycode[MAX_SENSOR][8];
     uint16_t speedData[MAX_SPEED][2];
+    uint16_t id;
+    uint16_t wifi;
     uint32_t checkSum;
     uint32_t countSave;
 };

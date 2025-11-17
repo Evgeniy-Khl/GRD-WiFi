@@ -185,9 +185,13 @@ uint8_t initData(void){
     dataRAM.config.speedData[7][0]=2400;  //0x960
     dataRAM.config.speedData[7][1]=0xFFF; //0xFFF
     
+    dataRAM.config.id = 1;
+    dataRAM.config.wifi = 0;
     dataRAM.config.checkSum = calcChecksum();
     dataRAM.config.countSave = 0;
   }
+  upv.pv.id = dataRAM.config.id;
+  upv.pv.wifi = dataRAM.config.wifi;
   upv.pv.modeCell = dataRAM.config.mode;
   setData(upv.pv.modeCell);
   return err;
@@ -205,6 +209,8 @@ uint32_t writeData(void){
   uint32_t l_Error = 0x00;
   uint32_t l_Index = 0x00;
   // Заполняем масив
+  dataRAM.config.id = upv.pv.id;
+  dataRAM.config.wifi = upv.pv.wifi;
   dataRAM.config.mode = upv.pv.modeCell;
   switch (upv.pv.modeCell){
   	case 0: for(uint8_t i=0;i<INDEX;i++){dataRAM.config.modeSet0[i] = upv.pv.set[i];} break;

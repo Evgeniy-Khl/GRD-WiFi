@@ -15,7 +15,7 @@ extern const char* modeName[];
 extern const char* otherName[];
 extern const char* relayName[];
 extern const char* analogName[];
-extern uint8_t displ_num, ds18b20_amount, ds18b20_num, familycode[][8], newDate, ticBeep;
+extern uint8_t dsplPW, displ_num, ds18b20_amount, ds18b20_num, familycode[][8], newDate, ticBeep;
 extern uint16_t speedData[MAX_SPEED][2], fillScreen, Y_str, X_left, Y_top, Y_bottom, color0, color1, mainTimer, tmrCounter, checkSmoke;
 extern int8_t numSet, numDate;
 extern RTC_HandleTypeDef hrtc;
@@ -184,13 +184,13 @@ void displ_1(void){
         if(relayOut.value & bit) color_box=YELLOW; else color_box=GRAY; // ILI9341_COLOR565(128, 128, 128);
         GUI_FillRectangle(X_left+200,Y_str,30,18,color_box);
         if(i==0){
-          sprintf(buffTFT,"%3u %%", upv.pv.dsplPW);
+          sprintf(buffTFT,"%3u %%", dsplPW);
           GUI_WriteString(X_left+240, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
         }
         Y_str = Y_str+18+5;
     }
 //---- ¬’Œƒ€ ----
-    Y_str = Y_str+18+5;
+//    Y_str = Y_str+18+5;
     GUI_WriteString(X_left+40,Y_str, "¬’€ƒ N1:", Font_11x18, WHITE, BLACK);
     if(HAL_GPIO_ReadPin(Input0_GPIO_Port, Input0_Pin) == GPIO_PIN_RESET) color_box=YELLOW; else color_box=GRAY; // Ì‡ÔˇÊÂÌËÂ ÔÓ‰‡ÌÓ
     GUI_FillRectangle(X_left+150,Y_str,30,18,color_box);
@@ -204,9 +204,9 @@ void displ_1(void){
     sprintf(buffTFT,"flT0=%2.3f; dpv0=%2.3f", flT0, dpv0);
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
 
-    Y_str = Y_str+18+5;
-    sprintf(buffTFT,"D1%2x; D2%2x; D3%2x; D4%2x;", dsErr[0], dsErr[1], dsErr[2], dsErr[3]);
-    GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
+//    Y_str = Y_str+18+5;
+//    sprintf(buffTFT,"D1%2x; D2%2x; D3%2x; D4%2x;", dsErr[0], dsErr[1], dsErr[2], dsErr[3]);
+//    GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
     Y_str = Y_str+18+5;
     sprintf(buffTFT,"Out=%+5d; T=%3.1f; E=%+3d", pid.output, (float)upv.pv.t[0]/10, pid.prev_error);
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
@@ -220,6 +220,12 @@ void displ_1(void){
     Y_str = Y_str+18+5;
     sprintf(buffTFT,"dPart=%+4d.0   ", pid.dPart);
     GUI_WriteString(10, Y_str, buffTFT, Font_11x18, YELLOW, fillScreen);
+    Y_str = Y_str+18+5;
+    sprintf(buffTFT,"N:%d IP: %d.%d.%d.%d", upv.pv.id, usd.sd.myIp[0], usd.sd.myIp[1], usd.sd.myIp[2], usd.sd.myIp[3]);
+    GUI_WriteString(10, Y_str, buffTFT, Font_11x18, GREEN, fillScreen);
+    Y_str = Y_str+18+5;
+    sprintf(buffTFT,"Token: %d chatID: %d", usd.sd.bot[0], usd.sd.bot[1]);
+    GUI_WriteString(10, Y_str, buffTFT, Font_11x18, GREEN, fillScreen);
 }
 
 //--------- Õ¿À¿ÿ“”¬¿ÕÕﬂ ----------------------------------
@@ -361,6 +367,8 @@ void displ_5(void){
     else if(i==1) sprintf(buffTFT,"%12s: %3i$", otherName[i], upv.pv.set[ALRM]); // "¿¬¿–»ﬂ"
     else if(i==2) sprintf(buffTFT,"%12s: %2.1f$", otherName[i], (float)upv.pv.set[HIST]/10); // "√»—“≈–≈«"
     else if(i==3) sprintf(buffTFT,"%12s: %3i", otherName[i], upv.pv.set[CHILL]); // "Œ’ŒÀŒƒ∆."
+    else if(i==7) sprintf(buffTFT,"%12s: %3i", otherName[i], upv.pv.id); // "ID"
+    else if(i==8) sprintf(buffTFT,"%12s: %3i", otherName[i], upv.pv.wifi); // "WiFi"
     else sprintf(buffTFT,"%12s: %3i", otherName[i], dataRAM.config.koff[upv.pv.modeCell][i-4]); // "Prop","Integ","Diff"
     if(i == numSet){color_txt = BLACK; color_box = WHITE;} else {color_txt = WHITE; color_box = BLACK;}
     GUI_WriteString(X_left, Y_str, buffTFT, Font_11x18, color_txt, color_box);
@@ -390,7 +398,7 @@ void displ_6(void){
   if(numSet==0) sprintf(buffTFT,"%3icek.", newval[numSet]);           // "œ–Œƒ”¬¿ÕÕﬂ"
   else if(numSet==1) sprintf(buffTFT,"%3i$", newval[numSet]);         // "¿¬¿–»ﬂ"
   else if(numSet==2) sprintf(buffTFT,"%1.1f$", (float)newval[numSet]/10); // "√»—“≈–≈«"
-  else sprintf(buffTFT,"%4i", newval[numSet]);                        // "Œ’ŒÀŒƒ∆.","Prop","Integ"
+  else sprintf(buffTFT,"%4i", newval[numSet]);                        // "Œ’ŒÀŒƒ∆.","Prop","Integ","Diff","ID","WiFi"
 
   Y_str = Y_str-4;
   GUI_WriteString(X_left+180, Y_str, buffTFT, Font_16x26, WHITE, BLACK);

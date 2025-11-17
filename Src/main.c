@@ -30,7 +30,7 @@
 #include "displ.h"
 #include "nvRam.h"
 #include "tftArcFill.h"
-
+#include "uart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +68,7 @@ RTC_DateTypeDef sDate;
 char buffTFT[40];
 const char* modeName[4]={"СУШЫННЯ","ОБЖАРКА","ВАРЫННЯ","КОПЧЕННЯ"};
 const char* setName[MAX_SET]={"t КАМЕРИ","t ПРОДУКТА","t ДИМА","ТРИВАЛЫСТЬ","ШВИДКЫСТЬ","ТАЙМ.ON","ТАЙМ.OFF","ЫНШЕ"};
-const char* otherName[MAX_OTHER]={"ПРОДУВАННЯ","АВАРЫЯ","ГЫСТЕРЕЗ","ОХОЛОДЖ.","Prop","Integ","Diff"};
+const char* otherName[MAX_OTHER]={"ПРОДУВАННЯ","АВАРЫЯ","ГЫСТЕРЕЗ","ОХОЛОДЖ.","Prop","Integ","Diff","N:","WiFi"};
 const char* relayName[7]={"ПЫД","НАГРЫВ","ТАЙМЕР","ВОЛОГА","ЕЛЕКТРО","Кл.ДИМА","Кл.ВОДИ"};
 //const char* analogName[2]={"ВЕНТИЛ.","ЫНШЕ"};
 //        2.00V        3.15V        4.30V        5.45V        6.60V        7.75V        8.90V        10.00V
@@ -77,18 +77,19 @@ const char* relayName[7]={"ПЫД","НАГРЫВ","ТАЙМЕР","ВОЛОГА","ЕЛЕКТРО","Кл.ДИМА","
 uint16_t speedData[MAX_SPEED][2], arhErrors[15];
 int16_t pvTH, pvRH, tmrCounter, resetDispl=0, displOff=DISPLAYOFF;
 uint16_t touch_x, touch_y, Y_str, X_left, Y_top, Y_bottom, fillScreen, color0, color1, checkSmoke, checkTime;
-uint8_t displ_num=0, oldNumSet, buttonAmount, lost;
+uint8_t dsplPW, displ_num, oldNumSet, buttonAmount, lost;
 uint8_t timer10ms, tmrVent, ticBeep, pwTriac, invers;
-uint8_t familycode[MAX_SENSOR][8], dsErr[MAX_SENSOR];
-int8_t ds18b20_amount, numSet=0, tmrWater;
+uint8_t familycode[MAX_SENSOR][8], dsErr[MAX_SENSOR], myIp[4];
+int8_t ds18b20_amount, numSet, tmrWater;
 int8_t relaySet[8]={-1,-1,-1,-1,-1,-1,-1,-1};
 int8_t analogSet[2]={-1,-1};
 uint8_t analogOut[2]={0};
 
 union Upv upv;
+union Usd usd;
 union Byte portFlag;
 union Byte relayOut;
-union d4v crc;
+//union d4v crc;
 PIDController pid;
 #ifdef MANUAL_CHECK
   float flT0=320, dpv0;
@@ -188,8 +189,12 @@ int main(void)
   LCD_Init(USE_VERTICAL0);
   GUI_Clear(fillScreen);
   if((lcddev.dir&1)==0) X_left = 20; else X_left = 100;
-  GUI_WriteString(35, Y_str, "GRD Max", Font_16x26, WHITE, fillScreen);
-  GUI_WriteString(165, Y_str+5, " v 4.1.6", Font_11x18, WHITE, fillScreen);
+  #ifdef MANUAL_CHECK
+  GUI_WriteString(30, Y_str, "MANUAL CHECK", Font_16x26, ORANGE, fillScreen);
+  #else
+  GUI_WriteString(30, Y_str, "GRD Max", Font_16x26, WHITE, fillScreen);
+  GUI_WriteString(160, Y_str+5, " v 4.2.0 WiFi", Font_11x18, WHITE, fillScreen);
+  #endif
   Y_str = Y_str+18+35;
   
   i16 = initData();
@@ -313,7 +318,7 @@ int main(void)
     
     //-------------- Начало проверки каждую 1 сек. -----------------------
     if(CHECK){ CHECK = OFF; upv.pv.errors=0;  //if(++temp>10) {temp=0; ++pvspeed; pvspeed&=7; upv.pv.t[1] = speedData[pvspeed][0]; sendToI2c(speedData[pvspeed][1]);}
-    upv.pv.dsplPW = 0;  
+    dsplPW = 0;  
     if(resetDispl) --resetDispl; 
     else if(displ_num){displ_num = 0; NEWBUTT = 1; displOff=DISPLAYOFF;}  // возврат к главному дисплею
     else if(displOff) --displOff;
@@ -389,8 +394,8 @@ int main(void)
         if(u16==ON) pwTriac = UpdatePID(&pid,0);            // ПИД нагреватель
         else {i16 = OFF; upv.pv.errors &= ~ERR5;}
         if(pwTriac) TRIAC = ON;                             // включить (SSR-25DA)
-        upv.pv.dsplPW = pwTriac;
-        if(upv.pv.dsplPW>100) upv.pv.dsplPW = 100;
+        dsplPW = pwTriac;
+        if(dsplPW>100) dsplPW = 100;
         //------ работает как охладитель
         if(upv.pv.set[CHILL]&1){  
           i16 = Relay(upv.pv.t[0] - upv.pv.set[T0]*10, upv.pv.set[HIST]);
@@ -437,10 +442,10 @@ int main(void)
         dpv0 = (float)pid.pPart/500 + (float)(pid.output-5)/100;
         flT0+=dpv0;
         upv.pv.t[0] = flT0;
-        int16_t pverr = set[T0]*10 - upv.pv.t[0];
+        int16_t pverr = upv.pv.set[T0]*10 - upv.pv.t[0];
         //----температура среды------
         if(count>3){ count=0;
-          pverr = set[T1]*10 - upv.pv.t[1];
+          pverr = upv.pv.set[T1]*10 - upv.pv.t[1];
           dpv1 =-1;
           if(pverr>200) dpv1 = 6;
           else if(pverr>100) dpv1 = 4;
@@ -449,14 +454,14 @@ int main(void)
           upv.pv.t[1]+=dpv1;
         }
         //-----температура дыма---------
-        pverr = set[T2]*10 - upv.pv.t[2];
+        pverr = upv.pv.set[T2]*10 - upv.pv.t[2];
         if(pverr>50) dpv2 = 5;
         else if(pverr>25) dpv2 = 1;
         else if(pverr<-25) dpv2 = -1;
         if(i16==OFF) dpv2=0;
         upv.pv.t[2]+=dpv2;
         //----влажный датчик--------
-        pverr = set[T3]*10 - upv.pv.t[3];
+        pverr = upv.pv.set[T3]*10 - upv.pv.t[3];
         if(pverr>150) dpv3 = 5;
         else if(HUMIDI==ON) dpv3 = 1;
         else if(HUMIDI==OFF) dpv3 = -1;
@@ -532,20 +537,20 @@ int main(void)
       display();
       // -------------------- UART ----------------------------------
       upv.pv.portFlag = portFlag.value;
-      upv.pv.pvOut = relayOut.value;
-      upv.pv.fanSpeed = speedData[upv.pv.set[VENT]][0];
       upv.pv.currHour = sTime.Hours;
       upv.pv.currMin = sTime.Minutes;
       upv.pv.currSec = sTime.Seconds;
       //-------------------------------------------------------------
-      crc.val[0] = 0;
-      for(uint8_t i=0;i<RAMPV_SIZE;i++){
-        crc.val[0] += upv.receivedData[i];
-        crc.val[0] ^= (crc.val[0]>>2);
+      uint8_t crc[2] = {0,END_MARKER}, stmk = START_MARKER;      
+      for(uint8_t i=0;i<RAMPV_SIZE;i++) {
+          crc[0] ^= upv.dataUnion[i]; // Using XOR to calculate the checksum
       }
-      HAL_UART_Transmit(&huart1,(uint8_t*)upv.receivedData,RAMPV_SIZE,0x1000);// отправка upv
-      HAL_UART_Transmit(&huart1,(uint8_t*)crc.data,4,0x1000);   // отправка crc, "\r=<CR>, \n=<LF>"
+      HAL_UART_Transmit(&huart1,&stmk,1,0x1000);      // Отправляем: [Старт]
+      HAL_UART_Transmit(&huart1,upv.dataUnion,RAMPV_SIZE,0x1000); // [Данные]
+      HAL_UART_Transmit(&huart1,crc,2,0x1000);                    // [CRC] [Конец]
+      HAL_UART_Receive_IT(&huart1,(uint8_t*)rxBuffer,SEND_SIZE+3);// Принимаем [Старт][Данные][CRC][Конец]
     }
+    //-------------- КОНЕЦ проверки каждую 1 сек. -----------------------
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -885,7 +890,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+  espCallback();
+}
 /* USER CODE END 4 */
 
 /**
