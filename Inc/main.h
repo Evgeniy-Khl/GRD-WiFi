@@ -85,8 +85,8 @@ void Error_Handler(void);
 #define Input1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define DIAGONAL    28          // 24 -> для дисплеев 2,4"; 28 -> для дисплеев 2,8"; 32 -> для дисплеев 3,2"
-#define TOUCHMODE   0           // 0 или 1
+#define DIAGONAL    28          // 24 -> пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2,4"; 28 -> пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2,8"; 32 -> пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 3,2"
+#define TOUCHMODE   0           // 0 пїЅпїЅпїЅ 1
 #define MAX_SENSOR  4
 #define MAX_MODE    4
 #define MAX_SET     8
@@ -95,27 +95,27 @@ void Error_Handler(void);
 #define ON          1
 #define OFF         0
 
-#define T0    0 // Уставка T1 грд. 
-#define T1    1 // Уставка T2 грд. 
-#define T2    2 // Уставка T3 грд. (Дым)
-#define T3    3 // Уставка T4 грд. (Влажный)
-#define TMR0  4 // Длительность режима мин.
-#define VENT  5 // Скорость вентилятора %
-#define TMON  6 // Таймер ON сек.
-#define TMOFF 7 // Таймер OFF сек.
-#define TMR1  8 // Длительность продувки сек.
-#define ALRM  9 // Авария грд.
-#define HIST  10 // Гистерезис грд/10
-#define CHILL 11 // Охлаждение
+#define T0    0 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ T1 пїЅпїЅпїЅ. 
+#define T1    1 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ T2 пїЅпїЅпїЅ. 
+#define T2    2 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ T3 пїЅпїЅпїЅ. (пїЅпїЅпїЅ)
+#define T3    3 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ T4 пїЅпїЅпїЅ. (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+#define TMR0  4 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ.
+#define VENT  5 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ %
+#define TMON  6 // пїЅпїЅпїЅпїЅпїЅпїЅ ON пїЅпїЅпїЅ.
+#define TMOFF 7 // пїЅпїЅпїЅпїЅпїЅпїЅ OFF пїЅпїЅпїЅ.
+#define TMR1  8 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ.
+#define ALRM  9 // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ.
+#define HIST  10 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ/10
+#define CHILL 11 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 #define ERR1  0x0010  //
 #define ERR2  0x0020  //
-#define ERR3  0x0040  // ПЕРЕГРЫВ В КАМЕРI
-#define ERR4  0x0080  // ПЕРЕГРЫВ В ПРОДУКТI
-#define ERR5  0x0100  // ВIДХIЛЕННЯ ТЕМПЕРАТУРИ В КАМЕРI
-#define ERR6  0x0200  // ВIДХIЛЕННЯ ТЕМПЕРАТУРИ ДИМA
+#define ERR3  0x0040  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅI
+#define ERR4  0x0080  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅI
+#define ERR5  0x0100  // пїЅIпїЅпїЅIпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅI
+#define ERR6  0x0200  // пїЅIпїЅпїЅIпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅA
 #define ERR7  0x0400  //
-#define ERR8  0x0800  // НЕ ПРАЦЮЭ ВЕНТИЛЯТОР
+#define ERR8  0x0800  // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 
 #include <stdio.h>
@@ -129,44 +129,44 @@ void Error_Handler(void);
 #else
   #define CHKSMOKE  1500 // (25 min.) waiting for smoke temperature check in sec.
 #endif
-#define BEGINCOOL   400 // температура 40 грд. выше которой ЗАПРЕЩЕНО включение охлаждения
-#define BEGINHUM    400 // запрет увлажнения при температуре ниже 40 грд.
+#define BEGINCOOL   400 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 40 пїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define BEGINHUM    400 // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 40 пїЅпїЅпїЅ.
 #define INDEX       12
-#define START_MARKER  0xAA  // Стартовый байт
-#define END_MARKER    0x55  // Конечный байт
+#define START_MARKER  0xAA  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+#define END_MARKER    0x55  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 
 struct __attribute__((packed)) Rampv {
-    uint8_t id;          // 1 байт ID прибора
-    uint8_t wifi;        // 1 байт подключение к сети
-    uint8_t modeCell;    // 1 байт номер режима
-    uint8_t portFlag;    // 1 байт Flags CHECK; SPEED; WORK; NEWBUTT; VENTIL; PERFECT; RESERVE; PURGING
-    uint8_t currHour;    // 1 байт часы
-    uint8_t currMin;     // 1 байт минуты
-    uint8_t currSec;     // 1 байт секунды
-    uint16_t errors;     // 2 байт ошибки
-    int16_t t[4];        // 8 байт значения датчиков температуры
-    uint16_t set[INDEX]; //24 байт Установки
+    uint8_t id;          // 1 пїЅпїЅпїЅпїЅ ID пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    uint8_t wifi;        // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
+    uint8_t modeCell;    // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    uint8_t portFlag;    // 1 пїЅпїЅпїЅпїЅ Flags CHECK; SPEED; WORK; NEWBUTT; VENTIL; PERFECT; RESERVE; PURGING
+    uint8_t currHour;    // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+    uint8_t currMin;     // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    uint8_t currSec;     // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    uint16_t errors;     // 2 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    int16_t t[4];        // 8 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    uint16_t set[INDEX]; //24 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 };
-#define RAMPV_SIZE 7+2+8+INDEX*2 // определение размера
+#define RAMPV_SIZE 7+2+8+INDEX*2 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 union Upv{
   struct Rampv pv;
-  uint8_t dataUnion[RAMPV_SIZE]; // Массив для приема
+  uint8_t dataUnion[RAMPV_SIZE]; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 struct __attribute__((packed)) Senddata {
-    uint8_t command;     // 1 байт комманды
-    uint8_t myIp[4];     // 4 байт IP
-    uint8_t bot[2];      // 2 байт strlen(botToken); strlen(chatID);
-    uint16_t set[INDEX]; //24 байт Установки
+    uint8_t command;     // 1 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    uint8_t myIp[4];     // 4 пїЅпїЅпїЅпїЅ IP
+    uint8_t bot[2];      // 2 пїЅпїЅпїЅпїЅ strlen(botToken); strlen(chatID);
+    uint16_t set[INDEX]; //24 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 };
-#define SEND_SIZE 7+INDEX*2 // определение размера
+#define SEND_SIZE 7+INDEX*2 // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 union Usd{
   struct Senddata sd;
-  uint8_t dataUnion[SEND_SIZE]; // Массив для приема
+  uint8_t dataUnion[SEND_SIZE]; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 
-/* ---структура с битовыми полями -----*/
+/* ---пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ -----*/
 struct byte {
     unsigned a0: 1;
     unsigned a1: 1;
@@ -185,7 +185,7 @@ union Byte {
 
 extern union Upv upv;
 extern union Usd usd;
-extern uint8_t rxBuffer[SEND_SIZE+3];// [Старт][Данные][CRC][Конец]
+extern uint8_t rxBuffer[SEND_SIZE+3];// [пїЅпїЅпїЅпїЅпїЅ][пїЅпїЅпїЅпїЅпїЅпїЅ][CRC][пїЅпїЅпїЅпїЅпїЅ]
 
 union d4v{
   uint8_t data[4];  
@@ -193,7 +193,7 @@ union d4v{
 };
 
 typedef struct {
-    float Ki, iPart, Kp, pPart;  // Коэффициенты PID
+    float Ki, iPart, Kp, pPart;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ PID
     int32_t dPart, prev_error, output;
     uint16_t Kd;
 } PIDController;
@@ -205,18 +205,18 @@ extern PIDController pid;
 #define WORK 	  portFlag.bitfield.a2  // At work flag
 #define NEWBUTT portFlag.bitfield.a3  // New screen flag
 #define VENTIL	portFlag.bitfield.a4  // Fan speed flag
-#define PERFECT	portFlag.bitfield.a5  // Достигли желаемой температуры
-#define RESERVE portFlag.bitfield.a6  // резерв
-#define PURGING portFlag.bitfield.a7  // Продувка
+#define PERFECT	portFlag.bitfield.a5  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define RESERVE portFlag.bitfield.a6  // пїЅпїЅпїЅпїЅпїЅпїЅ
+#define PURGING portFlag.bitfield.a7  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 #define TRIAC   relayOut.bitfield.a0  // SSR-25DA
-#define HEATER  relayOut.bitfield.a1  // НАГРЕВАТЕЛЬ
-#define TIMER 	relayOut.bitfield.a2  // ТАЙМЕР
-#define HUMIDI	relayOut.bitfield.a3  // УВЛАЖНИТЕЛЬ
-#define ELECTRO	relayOut.bitfield.a4  // Электроподжиг
-#define SMOKE   relayOut.bitfield.a5  // Клапан дыма
-#define WATER 	relayOut.bitfield.a6  // Клапан воды
-#define ALARM   relayOut.bitfield.a7  // Тревога
+#define HEATER  relayOut.bitfield.a1  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define TIMER 	relayOut.bitfield.a2  // пїЅпїЅпїЅпїЅпїЅпїЅ
+#define HUMIDI	relayOut.bitfield.a3  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define ELECTRO	relayOut.bitfield.a4  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+#define SMOKE   relayOut.bitfield.a5  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+#define WATER 	relayOut.bitfield.a6  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+#define ALARM   relayOut.bitfield.a7  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 extern union Byte portFlag;
 extern union Byte relayOut;
